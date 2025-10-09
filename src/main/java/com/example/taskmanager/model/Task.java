@@ -1,6 +1,9 @@
 package com.example.taskmanager.model;
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 
 @Entity
 public class Task {
@@ -8,6 +11,8 @@ public class Task {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Task must be titled")
+    @Size(max = 100, message = "Titles must be shorter than 100 characters")
     private String title;
     private String description;
     private LocalDate dueDate;
