@@ -15,7 +15,14 @@ Simple REST API for managing tasks built using Java and Spring Boot.
 
 ## How to Run
 1. Clone the repo
-2. Update `application.properties` with your PostgreSQL username/password
-3. Run the app with:
-   ```bash
-   ./gradlew bootRun
+2. Update src/main/resources/application.properties with your PostgreSQL username and password
+3. Start the backend:
+```bash
+./gradlew bootRun
+```
+4. To start the frontend:
+```bash
+cd frontend
+npm install
+npm run dev
+```
