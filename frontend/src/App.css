@@ -235,3 +235,33 @@ textarea:focus {
     font-size: 0.9rem;
     color: #9ca3af;
 }
+
+.task-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chip.danger {
+    background-color: #ffe6e6;
+    color: #b3261e;
+}
+
+.btn.secondary {
+    margin-top: 0.5rem;
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid #d1d5db;
+    background: #f9fafb;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.btn.secondary:hover:not(:disabled) {
+    background: #e5e7eb;
+}
+
+.btn.secondary:disabled {
+    opacity: 0.6;
+    cursor: default;
+}

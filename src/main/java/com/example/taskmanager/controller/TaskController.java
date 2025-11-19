@@ -101,4 +101,12 @@ public class TaskController {
             return ResponseEntity.ok(task);
         }).orElse(ResponseEntity.notFound().build());
     }
+
+    @PatchMapping("/{id}/toggle-complete")
+    public Task toggleTaskCompleted(@PathVariable Long id) {
+        return taskRepository.findById(id).map(task -> {
+            task.setCompleted(!task.isCompleted());
+            return taskRepository.save(task);
+        }).orElse(null);
+    }
 }

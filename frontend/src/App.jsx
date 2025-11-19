@@ -45,6 +45,27 @@ function App() {
         }));
     };
 
+    const handleComplete = async (id) => {
+        try {
+            const response = await fetch(`http://localhost:8080/api/tasks/${id}/complete`, {
+                method: 'PATCH',
+            });
+
+            if (!response.ok) {
+                console.error('Failed to complete task');
+                return;
+            }
+
+            const updatedTask = await response.json();
+
+            setTasks((prev) =>
+                prev.map((t) => (t.id === id ? updatedTask : t))
+            );
+        } catch (err) {
+            console.error('Error completing task:', err);
+        }
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
 
@@ -98,6 +119,7 @@ function App() {
                     {}
                     <section className="card">
                         <h2>Add New Task</h2>
+
                         <form className="task-form" onSubmit={handleSubmit}>
                             <div className="form-row">
                                 <label htmlFor="title">Title</label>
@@ -158,31 +180,67 @@ function App() {
 
                         {!loading && !error && tasks.length > 0 && (
                             <ul className="task-list">
-                                {tasks.map((task) => (
-                                    <li
-                                        key={task.id}
-                                        className={`task-item ${
-                                            task.completed ? "task-completed" : ""
-                                        }`}
-                                    >
-                                        <div className="task-main">
-                                            <h3>{task.title}</h3>
-                                            {task.description && (
-                                                <p className="task-description">{task.description}</p>
-                                            )}
-                                            <div className="task-meta">
-                                                {task.dueDate && (
-                                                    <span className="chip subtle">
-                            Due {task.dueDate}
-                          </span>
+                                {tasks.map((task) => {
+                                    const isOverdue =
+                                        task.dueDate &&
+                                        !task.completed &&
+                                        new Date(task.dueDate) < new Date();
+
+                                    return (
+                                        <li
+                                            key={task.id}
+                                            className={`task-item ${
+                                                task.completed ? "task-completed" : ""
+                                            }`}
+                                        >
+                                            <div className="task-main">
+                                                <div className="task-header-row">
+                                                    <h3>{task.title}</h3>
+
+                                                    <span
+                                                        className={
+                                                            task.completed
+                                                                ? "chip success"
+                                                                : isOverdue
+                                                                    ? "chip danger"
+                                                                    : "chip subtle"
+                                                        }
+                                                    >
+                                                    {task.completed
+                                                        ? "Completed"
+                                                        : isOverdue
+                                                            ? "Past Due"
+                                                            : "Pending"}
+                                                </span>
+                                                </div>
+
+                                                {task.description && (
+                                                    <p className="task-description">
+                                                        {task.description}
+                                                    </p>
                                                 )}
-                                                {task.completed && (
-                                                    <span className="chip success">Completed</span>
-                                                )}
+
+                                                <div className="task-meta">
+                                                    {task.dueDate && (
+                                                        <span className="chip subtle">
+                                                        Due {task.dueDate}
+                                                    </span>
+                                                    )}
+                                                </div>
+
+                                                <button
+                                                    className="btn secondary"
+                                                    onClick={() => handleComplete(task.id)}
+                                                    disabled={task.completed}
+                                                >
+                                                    {task.completed
+                                                        ? "Done"
+                                                        : "Mark Complete"}
+                                                </button>
                                             </div>
-                                        </div>
-                                    </li>
-                                ))}
+                                        </li>
+                                    );
+                                })}
                             </ul>
                         )}
                     </section>
