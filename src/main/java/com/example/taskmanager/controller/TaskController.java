@@ -3,6 +3,7 @@ import com.example.taskmanager.model.Task;
 import com.example.taskmanager.repository.TaskRepository;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Comparator;
@@ -31,10 +32,12 @@ public class TaskController {
                     .filter(t -> t.isCompleted() == completed)
                     .collect(Collectors.toList());
         }
-        if (overdue){
+        if (overdue) {
             LocalDate today = LocalDate.now();
             tasks = tasks.stream()
-                    .filter(t-> t.getDueDate() != null && t.getDueDate().isBefore(today))
+                    .filter(t -> t.getDueDate() != null
+                            && t.getDueDate().isBefore(today)
+                            && !t.isCompleted())
                     .collect(Collectors.toList());
         }
         if(sortByDueDate){
@@ -78,7 +81,7 @@ public class TaskController {
         taskRepository.deleteById(id);
     }
 
-    // PATCH /api/tasks/{id}/complete -- sets completed = true
+    // PATCH /api/tasks/{id}/complete - sets completed = true
     @PatchMapping("/{id}/complete")
     public ResponseEntity<Task> markComplete(@PathVariable Long id) {
         return taskRepository.findById(id).map(task-> {
@@ -90,7 +93,7 @@ public class TaskController {
         }).orElse(ResponseEntity.notFound().build());
     }
 
-    // PATCH /api/tasks/{id}/incomplete -- sets completed = false
+    // PATCH /api/tasks/{id}/incomplete - sets completed = false
     @PatchMapping("/{id}/incomplete")
     public ResponseEntity<Task> markIncomplete(@PathVariable Long id) {
         return taskRepository.findById(id).map(task-> {
@@ -108,5 +111,30 @@ public class TaskController {
             task.setCompleted(!task.isCompleted());
             return taskRepository.save(task);
         }).orElse(null);
+    }
+
+    @DeleteMapping("/completed")
+    @Transactional
+    public ResponseEntity<Void> clearCompletedTasks() {
+        System.out.println("CLEAR COMPLETED HIT");
+
+        List<Task> completedTasks = taskRepository.findByCompleted(true);
+        System.out.println("Completed tasks found: " + completedTasks.size());
+
+        taskRepository.deleteByCompleted(true);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/overdue")
+    @Transactional
+    public ResponseEntity<Void> clearOverdueTasks() {
+        System.out.println("CLEAR OVERDUE HIT");
+
+        LocalDate today = LocalDate.now();
+        List<Task> overdueTasks = taskRepository.findByDueDateBeforeAndCompleted(today, false);
+        System.out.println("Overdue tasks found: " + overdueTasks.size());
+
+        taskRepository.deleteByDueDateBeforeAndCompleted(today, false);
+        return ResponseEntity.noContent().build();
     }
 }

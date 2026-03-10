@@ -12,4 +12,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     List<Task> findByCompleted(boolean completed, Sort sort);
     List<Task> findByDueDateBefore(LocalDate date);
     List<Task> findByDueDateBeforeAndCompleted(LocalDate date, boolean completed);
+    void deleteByCompleted(boolean completed);
+    void deleteByDueDateBeforeAndCompleted(LocalDate date, boolean completed);
 }

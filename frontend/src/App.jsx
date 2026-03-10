@@ -5,16 +5,27 @@ function App() {
     const [tasks, setTasks] = useState([]);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(true);
-
+    const [filter, setFilter] = useState("all");
     const [newTask, setNewTask] = useState({
         title: "",
         description: "",
         dueDate: "",
     });
 
-    const fetchTasks = () => {
+    const fetchTasks = (selectedFilter = filter) => {
         setLoading(true);
-        fetch("http://localhost:8080/api/tasks")
+
+        let url = "http://localhost:8080/api/tasks";
+
+        if (selectedFilter === "active") {
+            url += "?completed=false";
+        } else if (selectedFilter === "completed") {
+            url += "?completed=true";
+        } else if (selectedFilter === "overdue") {
+            url += "?overdue=true";
+        }
+
+        fetch(url)
             .then((res) => {
                 if (!res.ok) {
                     throw new Error("Failed to fetch tasks");
@@ -34,8 +45,8 @@ function App() {
     };
 
     useEffect(() => {
-        fetchTasks();
-    }, []);
+        fetchTasks(filter);
+    }, [filter]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -98,12 +109,46 @@ function App() {
                     description: "",
                     dueDate: "",
                 });
-                fetchTasks();
+                fetchTasks(filter);
             })
             .catch((err) => {
                 console.error(err);
                 alert("Error creating task. Check console/logs.");
             });
+    };
+
+    const handleClearCompleted = async () => {
+        try {
+            const response = await fetch("http://localhost:8080/api/tasks/completed", {
+                method: "DELETE",
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to clear completed tasks");
+            }
+
+            fetchTasks(filter);
+        } catch (err) {
+            console.error(err);
+            alert("Could not clear completed tasks.");
+        }
+    };
+
+    const handleClearOverdue = async () => {
+        try {
+            const response = await fetch("http://localhost:8080/api/tasks/overdue", {
+                method: "DELETE",
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to clear overdue tasks");
+            }
+
+            fetchTasks(filter);
+        } catch (err) {
+            console.error(err);
+            alert("Could not clear overdue tasks.");
+        }
     };
 
     return (
@@ -164,12 +209,64 @@ function App() {
                             </button>
                         </form>
                     </section>
-
-                    {}
                     <section className="card">
                         <div className="card-header">
                             <h2>Tasks</h2>
                             {loading && <span className="chip">Loading…</span>}
+                        </div>
+
+                        <div className="task-toolbar">
+                            <div className="filter-group">
+                                <button
+                                    type="button"
+                                    className={`btn filter-btn ${filter === "all" ? "active-filter" : ""}`}
+                                    onClick={() => setFilter("all")}
+                                >
+                                    All
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className={`btn filter-btn ${filter === "active" ? "active-filter" : ""}`}
+                                    onClick={() => setFilter("active")}
+                                >
+                                    Active
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className={`btn filter-btn ${filter === "completed" ? "active-filter" : ""}`}
+                                    onClick={() => setFilter("completed")}
+                                >
+                                    Completed
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className={`btn filter-btn ${filter === "overdue" ? "active-filter" : ""}`}
+                                    onClick={() => setFilter("overdue")}
+                                >
+                                    Overdue
+                                </button>
+                            </div>
+
+                            <div className="clear-group">
+                                <button
+                                    type="button"
+                                    className="btn danger-btn"
+                                    onClick={handleClearCompleted}
+                                >
+                                    Clear Completed
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className="btn danger-btn"
+                                    onClick={handleClearOverdue}
+                                >
+                                    Clear Overdue
+                                </button>
+                            </div>
                         </div>
 
                         {error && <p className="error">{error}</p>}
@@ -202,16 +299,16 @@ function App() {
                                                             task.completed
                                                                 ? "chip success"
                                                                 : isOverdue
-                                                                    ? "chip danger"
-                                                                    : "chip subtle"
+                                                                ? "chip danger"
+                                                                : "chip subtle"
                                                         }
                                                     >
-                                                    {task.completed
-                                                        ? "Completed"
-                                                        : isOverdue
+                                                        {task.completed
+                                                            ? "Completed"
+                                                            : isOverdue
                                                             ? "Past Due"
                                                             : "Pending"}
-                                                </span>
+                                                    </span>
                                                 </div>
 
                                                 {task.description && (
@@ -223,8 +320,8 @@ function App() {
                                                 <div className="task-meta">
                                                     {task.dueDate && (
                                                         <span className="chip subtle">
-                                                        Due {task.dueDate}
-                                                    </span>
+                                                            Due {task.dueDate}
+                                                        </span>
                                                     )}
                                                 </div>
 
@@ -233,9 +330,7 @@ function App() {
                                                     onClick={() => handleComplete(task.id)}
                                                     disabled={task.completed}
                                                 >
-                                                    {task.completed
-                                                        ? "Done"
-                                                        : "Mark Complete"}
+                                                    {task.completed ? "Done" : "Mark Complete"}
                                                 </button>
                                             </div>
                                         </li>
